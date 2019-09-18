@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Nenter.Blog.Data.Entities
+namespace Nenter.Data.Entities
 {
     public interface ICreationAudited
     {
