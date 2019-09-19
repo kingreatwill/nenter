@@ -11,24 +11,24 @@ namespace Nenter.Dapper.Linq
     {
         #region Fields
         //--------------------------------------------------------------------------------------------------------------------------------------------------
-        private SqlWriter<TData> _writer;
+        private ISqlWriter<TData> _serverWriter;
 
         #endregion
         //--------------------------------------------------------------------------------------------------------------------------------------------------
 
         #region Properties
         //--------------------------------------------------------------------------------------------------------------------------------------------------
-        internal DynamicParameters Parameters => _writer.Parameters;
-        internal string Sql => _writer.Sql;
+        internal DynamicParameters Parameters => _serverWriter.Parameters;
+        internal string Sql => _serverWriter.Sql;
 
         #endregion
         //--------------------------------------------------------------------------------------------------------------------------------------------------
 
         #region ctor
         //--------------------------------------------------------------------------------------------------------------------------------------------------
-        public QueryBuilder()
+        public QueryBuilder(ISqlWriter<TData> serverWriter)
         {
-            
+             _serverWriter = serverWriter;
         }
 
         #endregion
@@ -38,7 +38,6 @@ namespace Nenter.Dapper.Linq
         //--------------------------------------------------------------------------------------------------------------------------------------------------
         public void Evaluate(Expression node)
         {
-            _writer = new SqlWriter<TData>();
             base.Visit(node);
         }
 
@@ -53,7 +52,7 @@ namespace Nenter.Dapper.Linq
         protected override Expression VisitUnary(UnaryExpression node)
         {
             if (node.NodeType == ExpressionType.Not)
-                _writer.NotOperater = true;
+                _serverWriter.NotOperater = true;
 
             //if ((node.Operand is LambdaExpression) && (((LambdaExpression)node.Operand).Body is MemberExpression))
             //    base.Visit(node.Operand);
@@ -64,7 +63,7 @@ namespace Nenter.Dapper.Linq
             Visit(node.Operand);
 
             if (QueryHelper.IsBoolean(node.Operand.Type) && !QueryHelper.IsHasValue(node.Operand))
-                _writer.Boolean(!QueryHelper.IsPredicate(node));
+                _serverWriter.Boolean(!QueryHelper.IsPredicate(node));
                 
             return node;
         }
@@ -80,18 +79,18 @@ namespace Nenter.Dapper.Linq
         {
             if (QueryHelper.IsSpecificMemberExpression(node, node.Expression.Type, CacheHelper.TryGetPropertyList(node.Expression.Type)))
             {
-                _writer.ColumnName(QueryHelper.GetPropertyNameWithIdentifierFromExpression(node));
+                _serverWriter.ColumnName(QueryHelper.GetPropertyNameWithIdentifierFromExpression(node));
                 return node;
             }
             else if (QueryHelper.IsVariable(node))
             {
-                _writer.Parameter(QueryHelper.GetValueFromExpression(node));
+                _serverWriter.Parameter(QueryHelper.GetValueFromExpression(node));
                 return node;
             }
             else if (QueryHelper.IsHasValue(node))
             {
                 var me = base.VisitMember(node);
-                _writer.IsNull();
+                _serverWriter.IsNull();
                 return me;
             }
             return base.VisitMember(node); ;
@@ -110,7 +109,7 @@ namespace Nenter.Dapper.Linq
             var value = node.Value as ConstantExpression;
             var val = QueryHelper.GetValueFromExpression(value ?? node);
 
-            _writer.Parameter(val);
+            _serverWriter.Parameter(val);
 
             return base.VisitConstant(node);
         }
@@ -128,26 +127,26 @@ namespace Nenter.Dapper.Linq
             Expression left = node.Left;
             Expression right = node.Right;
 
-            _writer.OpenBrace();
+            _serverWriter.OpenBrace();
 
             if (QueryHelper.IsBoolean(left.Type))
             {
                 Visit(left);
-                _writer.WhiteSpace();
-                _writer.Write(op);
-                _writer.WhiteSpace();
+                _serverWriter.WhiteSpace();
+                _serverWriter.Write(op);
+                _serverWriter.WhiteSpace();
                 Visit(right);
             }
             else
             {
                 VisitValue(left);
-                _writer.WhiteSpace();
-                _writer.Write(op);
-                _writer.WhiteSpace();
+                _serverWriter.WhiteSpace();
+                _serverWriter.Write(op);
+                _serverWriter.WhiteSpace();
                 VisitValue(right);
             }
 
-            _writer.CloseBrace();
+            _serverWriter.CloseBrace();
 
             return node;
         }
@@ -177,29 +176,29 @@ namespace Nenter.Dapper.Linq
                     return JoinMethod(node);
                 case MethodCall.Take:
                     // TOP(..)
-                    _writer.TopCount = (int)QueryHelper.GetValueFromExpression(node.Arguments[1]);
+                    _serverWriter.TopCount = (int)QueryHelper.GetValueFromExpression(node.Arguments[1]);
                     return node;
                 case MethodCall.Single:
                 case MethodCall.First:
                 case MethodCall.FirstOrDefault:
                     // TOP(1)
-                    _writer.TopCount = 1;
+                    _serverWriter.TopCount = 1;
                     return Visit(node.Arguments[node.Arguments.Count-1]);
                 case MethodCall.Distinct:
                     // DISTINCT
-                    _writer.IsDistinct = true;
+                    _serverWriter.IsDistinct = true;
                     return node;
                 case MethodCall.OrderBy:
                 case MethodCall.ThenBy:
                 case MethodCall.OrderByDescending:
                 case MethodCall.ThenByDescending:
                     // ORDER BY ...
-                    _writer.WriteOrder(QueryHelper.GetPropertyNameWithIdentifierFromExpression(node.Arguments[1]), node.Method.Name.Contains("Descending"));
+                    _serverWriter.WriteOrder(QueryHelper.GetPropertyNameWithIdentifierFromExpression(node.Arguments[1]), node.Method.Name.Contains("Descending"));
                     return Visit(node.Arguments[0]);
                 case MethodCall.Select:
                     var type = ((LambdaExpression)((UnaryExpression)node.Arguments[1]).Operand).Body.Type;
                     QueryHelper.GetTypeProperties(type);
-                    _writer.SelectType = type;
+                    _serverWriter.SelectType = type;
                     return base.VisitMethodCall(node);
             }
             return base.VisitMethodCall(node);
@@ -214,7 +213,7 @@ namespace Nenter.Dapper.Linq
         {
             if (!QueryHelper.IsPredicate(expr) && !QueryHelper.IsHasValue(expr))
             {
-                _writer.Boolean(true);
+                _serverWriter.Boolean(true);
             }
             return expr;
         }
@@ -246,7 +245,7 @@ namespace Nenter.Dapper.Linq
             var primaryJoinColumn = QueryHelper.GetPropertyNameWithIdentifierFromExpression(expression.Arguments[2]);
             var secondaryJoinColumn = QueryHelper.GetPropertyNameWithIdentifierFromExpression(expression.Arguments[3]);
 
-            _writer.WriteJoin(joinToTable.Name, joinToTable.Identifier, primaryJoinColumn, secondaryJoinColumn);
+            _serverWriter.WriteJoin(joinToTable.Name, joinToTable.Identifier, primaryJoinColumn, secondaryJoinColumn);
 
             return expression;
         }
@@ -257,17 +256,17 @@ namespace Nenter.Dapper.Linq
             if (!QueryHelper.IsSpecificMemberExpression(node.Arguments[0], typeof (TData),
                     CacheHelper.TryGetPropertyList<TData>())) return false;
 
-            _writer.IsNullFunction();
-            _writer.OpenBrace();
+            _serverWriter.IsNullFunction();
+            _serverWriter.OpenBrace();
             Visit(node.Arguments[0]);
-            _writer.Delimiter();
-            _writer.WhiteSpace();
-            _writer.EmptyString();
-            _writer.CloseBrace();
-            _writer.WhiteSpace();
-            _writer.Operator();
-            _writer.WhiteSpace();
-            _writer.EmptyString();
+            _serverWriter.Delimiter();
+            _serverWriter.WhiteSpace();
+            _serverWriter.EmptyString();
+            _serverWriter.CloseBrace();
+            _serverWriter.WhiteSpace();
+            _serverWriter.Operator();
+            _serverWriter.WhiteSpace();
+            _serverWriter.EmptyString();
             return true;
         }
 
@@ -280,10 +279,10 @@ namespace Nenter.Dapper.Linq
                     return node;
 
                 Visit(node.Object);
-                _writer.Like();
-                if (node.Method.Name == MethodCall.EndsWith || node.Method.Name == MethodCall.Contains) _writer.LikePrefix();
+                _serverWriter.Like();
+                if (node.Method.Name == MethodCall.EndsWith || node.Method.Name == MethodCall.Contains) _serverWriter.LikePrefix();
                 Visit(node.Arguments[0]);
-                if (node.Method.Name == MethodCall.StartsWith || node.Method.Name == MethodCall.Contains) _writer.LikeSuffix();
+                if (node.Method.Name == MethodCall.StartsWith || node.Method.Name == MethodCall.Contains) _serverWriter.LikeSuffix();
                 return node;
             }
 
@@ -318,20 +317,20 @@ namespace Nenter.Dapper.Linq
                 return node;
             }
             
-            _writer.In();
+            _serverWriter.In();
 
             // Add each string in the collection to the list of locations to obtain data about. 
             var queryStrings = (IList<object>)ev;
             var count = queryStrings.Count();
-            _writer.OpenBrace();
+            _serverWriter.OpenBrace();
             for (var i = 0; i < count; i++)
             {
-                _writer.Parameter(queryStrings.ElementAt(i));
+                _serverWriter.Parameter(queryStrings.ElementAt(i));
 
                 if (i + 1 < count)
-                    _writer.Delimiter();
+                    _serverWriter.Delimiter();
             }
-            _writer.CloseBrace();
+            _serverWriter.CloseBrace();
 
             return node;
         }

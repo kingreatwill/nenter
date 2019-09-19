@@ -43,12 +43,12 @@ namespace Nenter.Dapper.Linq
         /// </summary>
         /// <param name="connection"></param>
         /// <param name="provider"></param>
-        /// <param name="expression"></param>
-        public Linq2Dapper(IDbConnection connection, IQueryProvider provider = null, Expression<Func<TData, bool>>  expression = null)
+        public Linq2Dapper(IDbConnection connection, IQueryProvider provider = null)
         {
             Connection = connection;
             Provider = provider ?? new QueryProvider<TData>(connection);
-            Expression = (Expression) expression ?? Expression.Constant(this);
+            //Expression = (Expression) expression ?? Expression.Constant(this);
+            Expression = Expression.Constant(this);
         }
 
         #endregion

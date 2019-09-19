@@ -96,7 +96,8 @@ namespace Nenter.Dapper.Linq.Helpers
             var table = CacheHelper.TryGetTable(((MemberExpression)exp).Expression.Type);
             var member = ((MemberExpression)exp).Member;
 
-            return string.Format("{0}.[{1}]", table.Identifier, table.Columns[member.Name]);
+            return string.Format("{0}.{1}", table.Identifier, table.Columns[member.Name]);
+            //return string.Format("{0}.[{1}]", table.Identifier, table.Columns[member.Name]);
         }
 
         internal static string GetPropertyNameFromExpression(Expression expression)

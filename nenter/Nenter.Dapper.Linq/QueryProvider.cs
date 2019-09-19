@@ -1,7 +1,5 @@
 ﻿﻿using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
 using Nenter.Dapper.Linq.Helpers;
@@ -19,7 +17,12 @@ using System.Collections;
         public QueryProvider(IDbConnection connection)
         {
             _connection = connection;
-            _qb = new QueryBuilder<TData>();
+            _qb = connection.GetType().Name switch
+            {
+                "MySqlConnection" => new QueryBuilder<TData>(new MySqlWriter<TData>()),
+                "NpgsqlConnection" => new QueryBuilder<TData>(new NpgSqlWriter<TData>()),
+                _ => new QueryBuilder<TData>(new SqlServerWriter<TData>())
+            };
         }
 
         public IQueryable CreateQuery(Expression expression)
