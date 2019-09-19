@@ -1,3 +1,5 @@
+using System;
+using Nenter.Core.Extensions;
 using Nenter.Data.Entities;
 using NUnit.Framework;
 
@@ -26,6 +28,14 @@ namespace Nenter.Test
         public void Test2()
         {
             Assert.AreEqual(new TestAbs2().Get(), "321123");
+            Assert.Pass();
+        }
+        
+        [Test]
+        public void Test3()
+        {
+            Console.WriteLine( GuidExtensions.NextGuid());
+            Console.WriteLine( GuidExtensions.NextGuid());
             Assert.Pass();
         }
     }
