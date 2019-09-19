@@ -1,37 +1,41 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Text;
  using Dapper;
- using Nenter.Dapper.Linq.Helpers;
 
  namespace Nenter.Dapper.Linq.Helpers
 {
-    internal class SqlWriter<TData>
+    public abstract class SqlWriter<TData> : ISqlWriter<TData>
     {
-        private StringBuilder _selectStatement;
-        private readonly StringBuilder _joinTable;
-        private readonly StringBuilder _whereClause;
-        private readonly StringBuilder _orderBy;
+        protected StringBuilder _selectStatement;
+        protected readonly StringBuilder _joinTable;
+        protected readonly StringBuilder _whereClause;
+        protected readonly StringBuilder _orderBy;
 
-        private int _nextParameter;
+        
+        //MSSQL private string startQuotationMark = "[", endQuotationMark = "]";
+        //Mysql private string startQuotationMark = "`", endQuotationMark = "`";
+        //PostgreSQL private string startQuotationMark = "\"", endQuotationMark = "\"";
+        protected string startQuotationMark = "", endQuotationMark = "";
+        
+        protected int _nextParameter;
 
-        private string _parameter
+        protected string _parameter
         {
             get { return string.Format("ld__{0}", _nextParameter += 1); }
         }
 
-        internal Type SelectType;
-        internal bool NotOperater;
-        internal int TopCount;
-        internal bool IsDistinct;
+        public Type SelectType{ get; set; }
+        public bool NotOperater{ get; set; }
+        public int TopCount{ get; set; }
+        public bool IsDistinct{ get; set; }
 
-        internal DynamicParameters Parameters { get; private set; }
+        public DynamicParameters Parameters { get; set; }
 
-        internal string Sql
+        public virtual string Sql
         {
             get
             {
@@ -39,9 +43,15 @@ using System.Text;
                 return _selectStatement.ToString();
             }
         }
-
-        internal SqlWriter()
+        
+        public SqlWriter():this("","")
         {
+        }
+
+        public SqlWriter(string startQuotationMark = "", string endQuotationMark = "")
+        {
+            this.startQuotationMark = startQuotationMark;
+            this.endQuotationMark = endQuotationMark;
             Parameters = new DynamicParameters();
             _joinTable = new StringBuilder();
             _whereClause = new StringBuilder();
@@ -55,7 +65,7 @@ using System.Text;
             QueryHelper.GetTypeProperties(typeof (TData));
         }
 
-        private void SelectStatement()
+        protected virtual void SelectStatement()
         {
             var primaryTable = CacheHelper.TryGetTable<TData>();
             var selectTable = (SelectType != typeof(TData)) ? CacheHelper.TryGetTable(SelectType) : primaryTable;
@@ -73,7 +83,7 @@ using System.Text;
             for (int i = 0; i < selectTable.Columns.Count; i++)
             {
                 var x = selectTable.Columns.ElementAt(i);
-                _selectStatement.Append(string.Format("{0}.[{1}]", selectTable.Identifier, x.Value));
+                _selectStatement.Append($"{selectTable.Identifier}.{startQuotationMark}{x.Value}{endQuotationMark}");
 
                 if ((i + 1) != selectTable.Columns.Count)
                     _selectStatement.Append(",");
@@ -81,11 +91,11 @@ using System.Text;
                 _selectStatement.Append(" ");
             }
 
-            _selectStatement.Append(string.Format("FROM [{0}] {1}", primaryTable.Name, primaryTable.Identifier));
+            _selectStatement.Append($"FROM {startQuotationMark}{primaryTable.Name}{endQuotationMark} {primaryTable.Identifier}");
             _selectStatement.Append(WriteClause());
         }
 
-        private string WriteClause()
+        protected virtual string WriteClause()
         {
             var clause = string.Empty;
 
@@ -104,7 +114,7 @@ using System.Text;
             return clause;
         }
 
-        internal void WriteOrder(string name, bool descending)
+        public virtual void WriteOrder(string name, bool descending)
         {
             var order = new StringBuilder();
             order.Append(name);
@@ -113,17 +123,18 @@ using System.Text;
             _orderBy.Insert(0, order);
         }
 
-        internal void WriteJoin(string joinToTableName, string joinToTableIdentifier, string primaryJoinColumn, string secondaryJoinColumn)
+        public virtual void WriteJoin(string joinToTableName, string joinToTableIdentifier, string primaryJoinColumn, string secondaryJoinColumn)
         {
-            _joinTable.Append(string.Format(" JOIN [{0}] {1} ON {2} = {3}", joinToTableName, joinToTableIdentifier, primaryJoinColumn, secondaryJoinColumn));
+            _joinTable.Append(
+                $" JOIN {startQuotationMark}{joinToTableName}{endQuotationMark} {joinToTableIdentifier} ON {primaryJoinColumn} = {secondaryJoinColumn}");
         }
 
-        internal void Write(object value)
+        public virtual void Write(object value)
         {
             _whereClause.Append(value);
         }
 
-        internal void Parameter(object val)
+        public virtual void Parameter(object val)
         {
             if (val == null)
             {
@@ -137,17 +148,17 @@ using System.Text;
             Write("@" + param);
         }
 
-        internal void AliasName(string aliasName)
+        public virtual void AliasName(string aliasName)
         {
             Write(aliasName);
         }
 
-        internal void ColumnName(string columnName)
+        public virtual void ColumnName(string columnName)
         {
             Write(columnName);
         }
 
-        internal void IsNull()
+        public virtual void IsNull()
         {
             Write(" IS");
             if (!NotOperater)
@@ -156,12 +167,12 @@ using System.Text;
             NotOperater = false;
         }
 
-        internal void IsNullFunction()
+        public virtual void IsNullFunction()
         {
             Write("ISNULL");
         }
 
-        internal void Like()
+        public virtual void Like()
         {
             if (NotOperater)
                 Write(" NOT");
@@ -169,7 +180,7 @@ using System.Text;
             NotOperater = false;
         }
 
-        internal void In()
+        public virtual void In()
         {
             if (NotOperater)
                 Write(" NOT");
@@ -177,48 +188,48 @@ using System.Text;
             NotOperater = false;
         }
 
-        internal void Operator()
+        public virtual void Operator()
         {
             Write(QueryHelper.GetOperator((NotOperater) ? ExpressionType.NotEqual : ExpressionType.Equal));
             NotOperater = false;
         }
 
-        internal void Boolean(bool op)
+        public virtual void Boolean(bool op)
         {
             Write((op ? " <> " : " = ") + "0");
         }
 
-        internal void OpenBrace()
+        public virtual void OpenBrace()
         {
             Write("(");
         }
 
-        internal void CloseBrace()
+        public virtual void CloseBrace()
         {
             Write(")");
         }
 
-        internal void WhiteSpace()
+        public virtual void WhiteSpace()
         {
             Write(" ");
         }
 
-        internal void Delimiter()
+        public virtual void Delimiter()
         {
             Write(", ");
         }
 
-        internal void LikePrefix()
+        public virtual void LikePrefix()
         {
             Write("'%' + ");
         }
 
-        internal void LikeSuffix()
+        public virtual void LikeSuffix()
         {
             Write("+ '%'");
         }
 
-        internal void EmptyString()
+        public virtual void EmptyString()
         {
             Write("''");
         }
