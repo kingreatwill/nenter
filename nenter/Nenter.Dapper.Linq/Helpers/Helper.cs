@@ -21,7 +21,7 @@ namespace Nenter.Dapper.Linq.Helpers
                 (((MemberExpression)exp).Member.Name == memberName));
         }
 
-        internal static bool IsSpecificMemberExpression(Expression exp, Type declaringType, Dictionary<string, string> propertyList)
+        internal static bool IsSpecificMemberExpression(Expression exp, Type declaringType, SortedDictionary<string, EntityColumn> propertyList)
         {
             if (propertyList == null) return false;
             return ((exp is MemberExpression) &&
@@ -96,7 +96,7 @@ namespace Nenter.Dapper.Linq.Helpers
             var table = CacheHelper.TryGetTable(((MemberExpression)exp).Expression.Type);
             var member = ((MemberExpression)exp).Member;
 
-            return string.Format("{0}.[{1}]", table.Identifier, table.Columns[member.Name]);
+            return $"{table.Identifier}.[{table.Columns[member.Name].ColumnName}]";
         }
 
         internal static string GetPropertyNameFromExpression(Expression expression)
@@ -106,7 +106,7 @@ namespace Nenter.Dapper.Linq.Helpers
 
             var member = ((MemberExpression)exp).Member;
             var columns = CacheHelper.TryGetPropertyList(((MemberExpression)exp).Expression.Type);
-            return columns[member.Name];
+            return columns[member.Name].ColumnName;
         }
 
         internal static Expression GetMemberExpression(Expression expression)
@@ -127,32 +127,28 @@ namespace Nenter.Dapper.Linq.Helpers
 
         internal static string GetOperator(string methodName)
         {
-            switch (methodName)
+            return methodName switch
             {
-                case "Add": return "+";
-                case "Subtract": return "-";
-                case "Multiply": return "*";
-                case "Divide": return "/";
-                case "Negate": return "-";
-                case "Remainder": return "%";
-                default: return null;
-            }
+                "Add" => "+",
+                "Subtract" => "-",
+                "Multiply" => "*",
+                "Divide" => "/",
+                "Negate" => "-",
+                "Remainder" => "%",
+                _ => null
+            };
         }
 
         internal static string GetOperator(UnaryExpression u)
         {
-            switch (u.NodeType)
+            return u.NodeType switch
             {
-                case ExpressionType.Negate:
-                case ExpressionType.NegateChecked:
-                    return "-";
-                case ExpressionType.UnaryPlus:
-                    return "+";
-                case ExpressionType.Not:
-                    return IsBoolean(u.Operand.Type) ? "NOT" : "~";
-                default:
-                    return "";
-            }
+                ExpressionType.Negate => "-",
+                ExpressionType.NegateChecked => "-",
+                ExpressionType.UnaryPlus => "+",
+                ExpressionType.Not => (IsBoolean(u.Operand.Type) ? "NOT" : "~"),
+                _ => ""
+            };
         }
 
         internal static string GetOperator(BinaryExpression b)
@@ -249,34 +245,6 @@ namespace Nenter.Dapper.Linq.Helpers
         {
             return (expr is MemberExpression) && (((MemberExpression)expr).Expression is ConstantExpression);
         }
-
-        internal static TableHelper GetTypeProperties(Type type)
-        {
-            var table = CacheHelper.TryGetTable(type);
-            if (table.Name != null) return table; // have table in cache
-
-            // get properties add to cache
-            var properties = new Dictionary<string, string>();
-            type.GetProperties().ToList().ForEach(
-                    x =>
-                    {
-                        var col = (ColumnAttribute)x.GetCustomAttribute(typeof(ColumnAttribute));
-                        properties.Add(x.Name, (col != null) ? col.Name : x.Name);
-                    }
-                );
-
-
-            var attrib = (TableAttribute)type.GetCustomAttribute(typeof(TableAttribute));
-
-            table = new TableHelper
-            {
-                Name = (attrib != null ? attrib.Name : type.Name),
-                Columns = properties,
-                Identifier = string.Format("t{0}", CacheHelper.Size + 1)
-            };
-            CacheHelper.TryAddTable(type, table);
-
-            return table;
-        }
+       
     }
 }

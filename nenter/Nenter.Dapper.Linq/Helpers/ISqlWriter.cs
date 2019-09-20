@@ -8,15 +8,22 @@ using System.Text;
 
  namespace Nenter.Dapper.Linq.Helpers
 {
-    internal interface ISqlWriter<TData>
+    public interface ISqlWriter<TData>
     {
+        string StartQuotationMark { get; }
+        string  EndQuotationMark { get; }
+        
         Type SelectType{ get; set; }
         
         bool NotOperater{ get; set; }
         
+        int SkipCount{ get; set; }
+        
         int TopCount{ get; set; }
         
         bool IsDistinct{ get; set; }
+        
+        bool IsCount{ get; set; }
 
         DynamicParameters Parameters { get; set; }
 

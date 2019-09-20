@@ -5,7 +5,9 @@ using System.Linq.Expressions;
 using Nenter.Dapper.Linq.Exceptions;
 using Nenter.Dapper.Linq.Helpers;
 using Dapper;
-namespace Nenter.Dapper.Linq
+ using Nenter.Dapper.Linq.Extensions;
+
+ namespace Nenter.Dapper.Linq
 {
     internal class QueryBuilder<TData> : ExpressionVisitor
     {
@@ -79,7 +81,7 @@ namespace Nenter.Dapper.Linq
         {
             if (QueryHelper.IsSpecificMemberExpression(node, node.Expression.Type, CacheHelper.TryGetPropertyList(node.Expression.Type)))
             {
-                _serverWriter.ColumnName(QueryHelper.GetPropertyNameWithIdentifierFromExpression(node));
+                _serverWriter.ColumnName(_serverWriter.GetPropertyNameWithIdentifierFromExpression(node));
                 return node;
             }
             else if (QueryHelper.IsVariable(node))
@@ -174,10 +176,14 @@ namespace Nenter.Dapper.Linq
                     break;
                 case MethodCall.Join:
                     return JoinMethod(node);
+                case MethodCall.Skip:
+                    _serverWriter.SkipCount = (int)QueryHelper.GetValueFromExpression(node.Arguments[1]);
+                    return Visit(node.Arguments[0]);
                 case MethodCall.Take:
                     // TOP(..)
                     _serverWriter.TopCount = (int)QueryHelper.GetValueFromExpression(node.Arguments[1]);
-                    return node;
+                    return Visit(node.Arguments[0]);
+                   // return node;
                 case MethodCall.Single:
                 case MethodCall.First:
                 case MethodCall.FirstOrDefault:
@@ -188,12 +194,16 @@ namespace Nenter.Dapper.Linq
                     // DISTINCT
                     _serverWriter.IsDistinct = true;
                     return node;
+                case MethodCall.Count:
+                case MethodCall.LongCount:
+                    _serverWriter.IsCount = true;
+                    return Visit(node.Arguments[node.Arguments.Count-1]);
                 case MethodCall.OrderBy:
                 case MethodCall.ThenBy:
                 case MethodCall.OrderByDescending:
                 case MethodCall.ThenByDescending:
                     // ORDER BY ...
-                    _serverWriter.WriteOrder(QueryHelper.GetPropertyNameWithIdentifierFromExpression(node.Arguments[1]), node.Method.Name.Contains("Descending"));
+                    _serverWriter.WriteOrder(_serverWriter.GetPropertyNameWithIdentifierFromExpression(node.Arguments[1]), node.Method.Name.Contains("Descending"));
                     return Visit(node.Arguments[0]);
                 case MethodCall.Select:
                     var type = ((LambdaExpression)((UnaryExpression)node.Arguments[1]).Operand).Body.Type;
@@ -242,8 +252,8 @@ namespace Nenter.Dapper.Linq
             QueryHelper.GetTypeProperties(joinFromType);
             var joinToTable = QueryHelper.GetTypeProperties(joinToType);
 
-            var primaryJoinColumn = QueryHelper.GetPropertyNameWithIdentifierFromExpression(expression.Arguments[2]);
-            var secondaryJoinColumn = QueryHelper.GetPropertyNameWithIdentifierFromExpression(expression.Arguments[3]);
+            var primaryJoinColumn = _serverWriter.GetPropertyNameWithIdentifierFromExpression(expression.Arguments[2]);
+            var secondaryJoinColumn = _serverWriter.GetPropertyNameWithIdentifierFromExpression(expression.Arguments[3]);
 
             _serverWriter.WriteJoin(joinToTable.Name, joinToTable.Identifier, primaryJoinColumn, secondaryJoinColumn);
 

@@ -52,7 +52,12 @@ using System.Collections;
         // Queryable's "single value" standard query operators call this method.
         public TResult Execute<TResult>(Expression expression)
         {
-            return (TResult)Query(expression, typeof(IEnumerable).IsAssignableFrom(typeof(TResult)));
+            var t = Query(expression, typeof(IEnumerable).IsAssignableFrom(typeof(TResult)));
+            if (t == null)
+            {
+                return default(TResult);
+            }
+            return (TResult)t;
         }
         
         // Executes the expression tree that is passed to it. 
@@ -63,14 +68,22 @@ using System.Collections;
                 if (_connection.State != ConnectionState.Open) _connection.Open();
 
                 _qb.Evaluate(expression);
+
+                if (expression.Type == typeof(int))
+                {
+                    return  _connection.Query<int>(_qb.Sql, _qb.Parameters).ElementAt(0);
+                }
+                else  if (expression.Type == typeof(long))
+                {
+                    return  _connection.Query<long>(_qb.Sql, _qb.Parameters).ElementAt(0);
+                }
+
                 var data = _connection.Query<TData>(_qb.Sql, _qb.Parameters);
 
                 if (isEnumerable) return data;
-                return data.ElementAt(0);
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidQueryException(ex.Message + " | " + _qb.Sql);
+                
+                var enumerable = data as TData[] ?? data.ToArray();
+                return !enumerable.Any() ? default(TData) : enumerable.ElementAt(0);
             }
             finally
             {

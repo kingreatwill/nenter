@@ -17,7 +17,10 @@ namespace Nenter.Dapper.Linq.Helpers
         internal const string Single = "Single";
         internal const string First = "First";
         internal const string FirstOrDefault = "FirstOrDefault";
+        internal const string Skip = "Skip";
         internal const string Take = "Take";
+        internal const string Count = "Count";
+        internal const string LongCount = "LongCount";
         internal const string Distinct = "Distinct";
         internal const string OrderBy = "OrderBy";
         internal const string ThenBy = "ThenBy";

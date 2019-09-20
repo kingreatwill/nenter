@@ -1,6 +1,7 @@
 ﻿﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
+ using System.ComponentModel.DataAnnotations;
+ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -21,7 +22,7 @@ namespace Nenter.Dapper.Linq.Helpers
                 (((MemberExpression)exp).Member.Name == memberName));
         }
 
-        internal static bool IsSpecificMemberExpression(Expression exp, Type declaringType, Dictionary<string, string> propertyList)
+        internal static bool IsSpecificMemberExpression(Expression exp, Type declaringType, SortedDictionary<string, EntityColumn> propertyList)
         {
             if (propertyList == null) return false;
             return ((exp is MemberExpression) &&
@@ -87,18 +88,7 @@ namespace Nenter.Dapper.Linq.Helpers
 
             return CacheHelper.TryGetTable(((MemberExpression)exp).Expression.Type);
         }
-
-        internal static string GetPropertyNameWithIdentifierFromExpression(Expression expression)
-        {
-            var exp = GetMemberExpression(expression);
-            if (!(exp is MemberExpression)) return string.Empty;
-
-            var table = CacheHelper.TryGetTable(((MemberExpression)exp).Expression.Type);
-            var member = ((MemberExpression)exp).Member;
-
-            return string.Format("{0}.{1}", table.Identifier, table.Columns[member.Name]);
-            //return string.Format("{0}.[{1}]", table.Identifier, table.Columns[member.Name]);
-        }
+      
 
         internal static string GetPropertyNameFromExpression(Expression expression)
         {
@@ -107,7 +97,7 @@ namespace Nenter.Dapper.Linq.Helpers
 
             var member = ((MemberExpression)exp).Member;
             var columns = CacheHelper.TryGetPropertyList(((MemberExpression)exp).Expression.Type);
-            return columns[member.Name];
+            return columns[member.Name].ColumnName;
         }
 
         internal static Expression GetMemberExpression(Expression expression)
@@ -257,7 +247,7 @@ namespace Nenter.Dapper.Linq.Helpers
             if (table.Name != null) return table; // have table in cache
 
             // get properties add to cache
-            var properties = new Dictionary<string, string>();
+            var properties = new SortedDictionary<string,EntityColumn>();
             type.GetProperties()
                 .Where(p => !Attribute.IsDefined(p, typeof(NotMappedAttribute)))
                 .ToList()
@@ -265,7 +255,15 @@ namespace Nenter.Dapper.Linq.Helpers
                     x =>
                     {
                         var col = (ColumnAttribute)x.GetCustomAttribute(typeof(ColumnAttribute));
-                        properties.Add(x.Name, (col != null) ? col.Name : x.Name);
+                        var dbgen = (DatabaseGeneratedAttribute)x.GetCustomAttribute(typeof(DatabaseGeneratedAttribute));
+                        properties.Add(x.Name,new EntityColumn()
+                        {
+                            CSharpName = x.Name,
+                            ColumnName = (col != null) ? col.Name : x.Name,
+                            PrimaryKey = Attribute.IsDefined(x, typeof(KeyAttribute)),
+                            ForeignKey = Attribute.IsDefined(x, typeof(ForeignKeyAttribute)),
+                            GeneratedOption = dbgen==null?DatabaseGeneratedOption.None: dbgen.DatabaseGeneratedOption,
+                        });
                     }
                 );
 

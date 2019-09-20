@@ -1,5 +1,6 @@
 ﻿﻿using System;
-using System.Collections.Concurrent;
+ using System.Collections;
+ using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Nenter.Dapper.Linq.Helpers
@@ -60,12 +61,12 @@ namespace Nenter.Dapper.Linq.Helpers
             return TryGetTable(type).Identifier;
         }
 
-        internal static Dictionary<string, string> TryGetPropertyList<T>()
+        internal static SortedDictionary<string,EntityColumn> TryGetPropertyList<T>()
         {
             return TryGetPropertyList(typeof(T));
         }
 
-        internal static Dictionary<string, string> TryGetPropertyList(Type type)
+        internal static SortedDictionary<string,EntityColumn> TryGetPropertyList(Type type)
         {
             return TryGetTable(type).Columns;
         }

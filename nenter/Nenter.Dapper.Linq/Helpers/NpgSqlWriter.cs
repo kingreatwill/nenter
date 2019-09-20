@@ -8,15 +8,7 @@
         public NpgSqlWriter():base("\"","\"")
         {
         }
-        
-        public override string Sql
-        {
-            get
-            {
-                SelectStatement();
-                return _selectStatement.ToString();
-            }
-        }
+      
         
         protected override void SelectStatement()
         {
@@ -30,22 +22,37 @@
             if (IsDistinct)
                 _selectStatement.Append("DISTINCT ");
 
-            for (int i = 0; i < selectTable.Columns.Count; i++)
+            if (IsCount)
             {
-                var x = selectTable.Columns.ElementAt(i);
-                _selectStatement.Append($"{selectTable.Identifier}.{startQuotationMark}{x.Value}{endQuotationMark}");
+                _selectStatement.Append("COUNT(*) ");
+            }
+            else
+            {
+                for (int i = 0; i < selectTable.Columns.Count; i++)
+                {
+                    var x = selectTable.Columns.ElementAt(i);
+                    _selectStatement.Append($"{selectTable.Identifier}.{StartQuotationMark}{x.Value.ColumnName}{EndQuotationMark}");
 
-                if ((i + 1) != selectTable.Columns.Count)
-                    _selectStatement.Append(",");
+                    if ((i + 1) != selectTable.Columns.Count)
+                        _selectStatement.Append(",");
 
-                _selectStatement.Append(" ");
+                    _selectStatement.Append(" ");
+                }
+
             }
 
-            _selectStatement.Append($"FROM {startQuotationMark}{primaryTable.Name}{endQuotationMark} {primaryTable.Identifier}");
+            _selectStatement.Append($"FROM {StartQuotationMark}{primaryTable.Name}{EndQuotationMark} {primaryTable.Identifier}");
             _selectStatement.Append(WriteClause());
             
-            if (TopCount > 0)
+            if (TopCount <= 0) return;
+            if (SkipCount > 0)
+            {
+                _selectStatement.Append(" LIMIT " + SkipCount+ " , " + TopCount + " ");
+            }
+            else
+            {
                 _selectStatement.Append(" LIMIT " + TopCount + " ");
+            }
         }
     
     }

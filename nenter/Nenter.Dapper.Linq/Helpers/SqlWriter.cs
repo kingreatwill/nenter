@@ -19,7 +19,9 @@ using System.Text;
         //MSSQL private string startQuotationMark = "[", endQuotationMark = "]";
         //Mysql private string startQuotationMark = "`", endQuotationMark = "`";
         //PostgreSQL private string startQuotationMark = "\"", endQuotationMark = "\"";
-        protected string startQuotationMark = "", endQuotationMark = "";
+        public string StartQuotationMark { get; }
+        public string EndQuotationMark { get; }
+        
         
         protected int _nextParameter;
 
@@ -27,11 +29,13 @@ using System.Text;
         {
             get { return string.Format("ld__{0}", _nextParameter += 1); }
         }
-
+       
         public Type SelectType{ get; set; }
         public bool NotOperater{ get; set; }
+        public int SkipCount { get; set; }
         public int TopCount{ get; set; }
         public bool IsDistinct{ get; set; }
+        public bool IsCount { get; set; }
 
         public DynamicParameters Parameters { get; set; }
 
@@ -50,8 +54,8 @@ using System.Text;
 
         public SqlWriter(string startQuotationMark = "", string endQuotationMark = "")
         {
-            this.startQuotationMark = startQuotationMark;
-            this.endQuotationMark = endQuotationMark;
+            this.StartQuotationMark = startQuotationMark;
+            this.EndQuotationMark = endQuotationMark;
             Parameters = new DynamicParameters();
             _joinTable = new StringBuilder();
             _whereClause = new StringBuilder();
@@ -80,18 +84,27 @@ using System.Text;
             if (IsDistinct)
                 _selectStatement.Append("DISTINCT ");
 
-            for (int i = 0; i < selectTable.Columns.Count; i++)
+            if (IsCount)
             {
-                var x = selectTable.Columns.ElementAt(i);
-                _selectStatement.Append($"{selectTable.Identifier}.{startQuotationMark}{x.Value}{endQuotationMark}");
+                _selectStatement.Append("COUNT(*) ");
+            }
+            else
+            {
+                for (int i = 0; i < selectTable.Columns.Count; i++)
+                {
+                    var x = selectTable.Columns.ElementAt(i);
+                    _selectStatement.Append($"{selectTable.Identifier}.{StartQuotationMark}{x.Value.ColumnName}{EndQuotationMark}");
 
-                if ((i + 1) != selectTable.Columns.Count)
-                    _selectStatement.Append(",");
+                    if ((i + 1) != selectTable.Columns.Count)
+                        _selectStatement.Append(",");
 
-                _selectStatement.Append(" ");
+                    _selectStatement.Append(" ");
+                }
+
             }
 
-            _selectStatement.Append($"FROM {startQuotationMark}{primaryTable.Name}{endQuotationMark} {primaryTable.Identifier}");
+           
+            _selectStatement.Append($"FROM {StartQuotationMark}{primaryTable.Name}{EndQuotationMark} {primaryTable.Identifier}");
             _selectStatement.Append(WriteClause());
         }
 
@@ -126,7 +139,7 @@ using System.Text;
         public virtual void WriteJoin(string joinToTableName, string joinToTableIdentifier, string primaryJoinColumn, string secondaryJoinColumn)
         {
             _joinTable.Append(
-                $" JOIN {startQuotationMark}{joinToTableName}{endQuotationMark} {joinToTableIdentifier} ON {primaryJoinColumn} = {secondaryJoinColumn}");
+                $" JOIN {StartQuotationMark}{joinToTableName}{EndQuotationMark} {joinToTableIdentifier} ON {primaryJoinColumn} = {secondaryJoinColumn}");
         }
 
         public virtual void Write(object value)

@@ -4,7 +4,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
+using Nenter.Core.Extensions;
 using Nenter.Dapper.Linq.Extensions;
 using NUnit.Framework;
 
@@ -18,12 +20,12 @@ namespace Nenter.Dapper.Linq.Test
         }
 
         [Test]
-        public void Test1()
+        public async Task Test1()
         {
             var _connection = new SqlConnection("Server=(local);Initial Catalog=NenterTest;Integrated Security=True");
             try
             {
-                var s = _connection.Query<Addresses>(t=>t.Id==1).OrderBy(t=>t.Id).Single();
+                var s = await _connection.Query<Addresses>().CountAsync();
             }
             catch (Exception e)
             {
@@ -40,7 +42,7 @@ namespace Nenter.Dapper.Linq.Test
             var _connection = new MySqlConnection("Server=192.168.1.50;Port=3306;Database=DemoCloud;Uid=DemoCloudUser;Pwd=123456@lcb;");
             try
             {
-                var s = _connection.Query<Supplier>(t=>t.SupplierId==1).OrderBy(t=>t.SupplierId).Single();
+                var s = _connection.Query<Supplier>().OrderBy(t=>t.SupplierId).Skip(2).Take(10).Single();
             }
             catch (Exception e)
             {
