@@ -81,7 +81,7 @@ namespace Nenter.Dapper.Linq.Helpers
             return GetTableFromExpression(expression).Identifier;
         }
 
-        internal static TableHelper GetTableFromExpression(Expression expression)
+        internal static EntityTable GetTableFromExpression(Expression expression)
         {
             var exp = GetMemberExpression(expression);
             if (!(exp is MemberExpression)) return null;
@@ -241,7 +241,7 @@ namespace Nenter.Dapper.Linq.Helpers
             return (expr is MemberExpression) && (((MemberExpression)expr).Expression is ConstantExpression);
         }
 
-        internal static TableHelper GetTypeProperties(Type type)
+        internal static EntityTable GetTypeProperties(Type type)
         {
             var table = CacheHelper.TryGetTable(type);
             if (table.Name != null) return table; // have table in cache
@@ -270,11 +270,11 @@ namespace Nenter.Dapper.Linq.Helpers
 
             var attrib = (TableAttribute)type.GetCustomAttribute(typeof(TableAttribute));
 
-            table = new TableHelper
+            table = new EntityTable
             {
                 Name = (attrib != null ? attrib.Name : type.Name),
                 Columns = properties,
-                Identifier = string.Format("t{0}", CacheHelper.Size + 1)
+                Identifier = $"t{CacheHelper.Size + 1}"
             };
             CacheHelper.TryAddTable(type, table);
 

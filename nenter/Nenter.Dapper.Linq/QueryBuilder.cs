@@ -1,10 +1,11 @@
 ﻿﻿using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using Nenter.Dapper.Linq.Exceptions;
-using Nenter.Dapper.Linq.Helpers;
+
 using Dapper;
+ 
+ using Nenter.Dapper.Linq.Helpers;
+ using Nenter.Core.Extensions;
  using Nenter.Dapper.Linq.Extensions;
 
  namespace Nenter.Dapper.Linq
@@ -64,8 +65,8 @@ using Dapper;
 
             Visit(node.Operand);
 
-            if (QueryHelper.IsBoolean(node.Operand.Type) && !QueryHelper.IsHasValue(node.Operand))
-                _serverWriter.Boolean(!QueryHelper.IsPredicate(node));
+            if (node.Operand.Type.IsBoolean() && !node.Operand.IsHasValue())
+                _serverWriter.Boolean(!node.IsPredicate());
                 
             return node;
         }
@@ -79,17 +80,17 @@ using Dapper;
         /// <param name="node">The expression to visit.</param>
         protected override Expression VisitMember(MemberExpression node)
         {
-            if (QueryHelper.IsSpecificMemberExpression(node, node.Expression.Type, CacheHelper.TryGetPropertyList(node.Expression.Type)))
+            if (node.IsSpecificMemberExpression(node.Expression.Type, EntityTableCacheHelper.TryGetPropertyList(node.Expression.Type)))
             {
                 _serverWriter.ColumnName(_serverWriter.GetPropertyNameWithIdentifierFromExpression(node));
                 return node;
             }
-            else if (QueryHelper.IsVariable(node))
+            else if (node.IsVariable())
             {
-                _serverWriter.Parameter(QueryHelper.GetValueFromExpression(node));
+                _serverWriter.Parameter(node.GetValueFromExpression());
                 return node;
             }
-            else if (QueryHelper.IsHasValue(node))
+            else if (node.IsHasValue())
             {
                 var me = base.VisitMember(node);
                 _serverWriter.IsNull();
@@ -109,7 +110,7 @@ using Dapper;
         {
             if (node.Type == typeof(Linq2Dapper<TData>)) return node;
             var value = node.Value as ConstantExpression;
-            var val = QueryHelper.GetValueFromExpression(value ?? node);
+            var val = (value ?? node).GetValueFromExpression();
 
             _serverWriter.Parameter(val);
 
@@ -125,13 +126,13 @@ using Dapper;
         /// <param name="node">The expression to visit.</param>
         protected override Expression VisitBinary(BinaryExpression node)
         {
-            var op = QueryHelper.GetOperator(node);
+            var op = node.GetOperator();
             Expression left = node.Left;
             Expression right = node.Right;
 
             _serverWriter.OpenBrace();
 
-            if (QueryHelper.IsBoolean(left.Type))
+            if (left.Type.IsBoolean())
             {
                 Visit(left);
                 _serverWriter.WhiteSpace();
@@ -177,11 +178,11 @@ using Dapper;
                 case MethodCall.Join:
                     return JoinMethod(node);
                 case MethodCall.Skip:
-                    _serverWriter.SkipCount = (int)QueryHelper.GetValueFromExpression(node.Arguments[1]);
+                    _serverWriter.SkipCount = (int)node.Arguments[1].GetValueFromExpression();
                     return Visit(node.Arguments[0]);
                 case MethodCall.Take:
                     // TOP(..)
-                    _serverWriter.TopCount = (int)QueryHelper.GetValueFromExpression(node.Arguments[1]);
+                    _serverWriter.TopCount = (int)node.Arguments[1].GetValueFromExpression();
                     return Visit(node.Arguments[0]);
                    // return node;
                 case MethodCall.Single:
@@ -207,7 +208,9 @@ using Dapper;
                     return Visit(node.Arguments[0]);
                 case MethodCall.Select:
                     var type = ((LambdaExpression)((UnaryExpression)node.Arguments[1]).Operand).Body.Type;
-                    QueryHelper.GetTypeProperties(type);
+                    
+                    EntityTableCacheHelper.ToEntityTable(type);
+                    
                     _serverWriter.SelectType = type;
                     return base.VisitMethodCall(node);
             }
@@ -221,7 +224,7 @@ using Dapper;
 
         protected virtual Expression VisitPredicate(Expression expr)
         {
-            if (!QueryHelper.IsPredicate(expr) && !QueryHelper.IsHasValue(expr))
+            if (!expr.IsPredicate() && !expr.IsHasValue())
             {
                 _serverWriter.Boolean(true);
             }
@@ -249,8 +252,8 @@ using Dapper;
             if (joinFromType.IsGenericType) joinFromType = joinFromType.GenericTypeArguments[1];
             var joinToType = ((LambdaExpression)((UnaryExpression)expression.Arguments[4]).Operand).Parameters[1].Type;
 
-            QueryHelper.GetTypeProperties(joinFromType);
-            var joinToTable = QueryHelper.GetTypeProperties(joinToType);
+            EntityTableCacheHelper.ToEntityTable(joinFromType);
+            var joinToTable = EntityTableCacheHelper.ToEntityTable(joinToType);
 
             var primaryJoinColumn = _serverWriter.GetPropertyNameWithIdentifierFromExpression(expression.Arguments[2]);
             var secondaryJoinColumn = _serverWriter.GetPropertyNameWithIdentifierFromExpression(expression.Arguments[3]);
@@ -263,8 +266,8 @@ using Dapper;
 
         private bool IsNullMethod(MethodCallExpression node)
         {
-            if (!QueryHelper.IsSpecificMemberExpression(node.Arguments[0], typeof (TData),
-                    CacheHelper.TryGetPropertyList<TData>())) return false;
+            if (!node.Arguments[0].IsSpecificMemberExpression(typeof (TData),
+                    EntityTableCacheHelper.TryGetPropertyList<TData>())) return false;
 
             _serverWriter.IsNullFunction();
             _serverWriter.OpenBrace();
@@ -285,7 +288,7 @@ using Dapper;
             if (node.Method.DeclaringType == typeof(string))
             {
                 // LIKE '..'
-                if (!QueryHelper.IsSpecificMemberExpression(node.Object, typeof(TData), CacheHelper.TryGetPropertyList<TData>()))
+                if (!node.Object.IsSpecificMemberExpression(typeof(TData), EntityTableCacheHelper.TryGetPropertyList<TData>()))
                     return node;
 
                 Visit(node.Object);
@@ -302,24 +305,24 @@ using Dapper;
             if (node.Method.DeclaringType == typeof (List<string>))
             {
                 if (
-                    !QueryHelper.IsSpecificMemberExpression(node.Arguments[0], typeof (TData),
-                        CacheHelper.TryGetPropertyList<TData>()))
+                    !node.Arguments[0].IsSpecificMemberExpression( typeof (TData),
+                        EntityTableCacheHelper.TryGetPropertyList<TData>()))
                     return node;
 
 
                 Visit(node.Arguments[0]);
-                ev = QueryHelper.GetValueFromExpression(node.Object);
+                ev = node.Object.GetValueFromExpression();
 
             }
             else if (node.Method.DeclaringType == typeof (Enumerable))
             {
                 if (
-                    !QueryHelper.IsSpecificMemberExpression(node.Arguments[1], typeof (TData),
-                        CacheHelper.TryGetPropertyList<TData>()))
+                    !node.Arguments[1].IsSpecificMemberExpression(typeof (TData),
+                        EntityTableCacheHelper.TryGetPropertyList<TData>()))
                     return node;
 
                 Visit(node.Arguments[1]);
-                ev = QueryHelper.GetValueFromExpression(node.Arguments[0]);
+                ev = node.Arguments[0].GetValueFromExpression();
 
             }
             else

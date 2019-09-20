@@ -12,8 +12,8 @@
         
         protected override void SelectStatement()
         {
-            var primaryTable = CacheHelper.TryGetTable<TData>();
-            var selectTable = (SelectType != typeof(TData)) ? CacheHelper.TryGetTable(SelectType) : primaryTable;
+            var primaryTable = EntityTableCacheHelper.TryGetTable<TData>();
+            var selectTable = (SelectType != typeof(TData)) ? EntityTableCacheHelper.TryGetTable(SelectType) : primaryTable;
 
             _selectStatement = new StringBuilder();
 

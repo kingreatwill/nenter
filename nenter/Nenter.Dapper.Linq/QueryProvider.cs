@@ -2,11 +2,9 @@
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
-using Nenter.Dapper.Linq.Helpers;
 using System.Collections;
  using Dapper;
- using Nenter.Dapper.Linq.Exceptions;
-
+ using Nenter.Dapper.Linq.Helpers;
  namespace Nenter.Dapper.Linq
 {
     internal class QueryProvider<TData> : IQueryProvider

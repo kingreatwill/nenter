@@ -19,17 +19,17 @@ namespace Nenter.Dapper.Linq.Helpers
 
     internal class JoinPart
     {
-        internal string Table;
-        internal string OnField;
-        internal string EqualsField;
-        internal string Indentifier;
+//        internal string Table;
+//        internal string OnField;
+//        internal string EqualsField;
+//        internal string Indentifier;
     }
 
     internal class WherePart
     {
-        internal string Name;
-        internal string Operator;
-        internal string Value;
+//        internal string Name;
+//        internal string Operator;
+//        internal string Value;
     }
 
     internal class OrderPart

@@ -91,13 +91,13 @@ namespace Nenter.Data.SqlAdapter
             switch (methodName)
             {
                 case "StartsWith":
-                    return string.Format("{0}%", value);
+                    return $"{value}%";
 
                 case "EndsWith":
-                    return string.Format("%{0}", value);
+                    return $"%{value}";
 
                 case "StringContains":
-                    return string.Format("%{0}%", value);
+                    return $"%{value}%";
 
                 default:
                     throw new NotImplementedException();

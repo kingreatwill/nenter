@@ -1,6 +1,5 @@
 ﻿ using System.Linq;
  using System.Text;
- using Microsoft.VisualBasic;
 
  namespace Nenter.Dapper.Linq.Helpers
 {
@@ -12,8 +11,8 @@
 
         protected override void SelectStatement()
         {
-            var primaryTable = CacheHelper.TryGetTable<TData>();
-            var selectTable = (SelectType != typeof(TData)) ? CacheHelper.TryGetTable(SelectType) : primaryTable;
+            var primaryTable = EntityTableCacheHelper.TryGetTable<TData>();
+            var selectTable = (SelectType != typeof(TData)) ? EntityTableCacheHelper.TryGetTable(SelectType) : primaryTable;
 
             _selectStatement = new StringBuilder();
 
@@ -52,11 +51,10 @@
             {
                 //primaryTable.Columns
                 var order = new StringBuilder();
-                order.Append(Strings.Join(
+                order.Append(string.Join(
+                    ",",
                     primaryTable.Columns.Where(t => t.Value.PrimaryKey).Select(t =>
                             $"{primaryTable.Identifier}.{StartQuotationMark}{t.Value.ColumnName}{EndQuotationMark}")
-                        .ToArray(),
-                    ","
                 ));
                 order.Append(" ASC ");
                 _orderBy.Insert(0, order);

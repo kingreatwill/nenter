@@ -1,10 +1,9 @@
 ﻿﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
  using Dapper;
+ using Nenter.Dapper.Linq.Extensions;
 
  namespace Nenter.Dapper.Linq.Helpers
 {
@@ -27,7 +26,7 @@ using System.Text;
 
         protected string _parameter
         {
-            get { return string.Format("ld__{0}", _nextParameter += 1); }
+            get { return $"ld__{_nextParameter += 1}"; }
         }
        
         public Type SelectType{ get; set; }
@@ -64,15 +63,15 @@ using System.Text;
             GetTypeProperties();
         }
 
-        private void GetTypeProperties()
+        private EntityTable GetTypeProperties()
         {
-            QueryHelper.GetTypeProperties(typeof (TData));
+           return EntityTableCacheHelper.ToEntityTable(typeof (TData));
         }
 
         protected virtual void SelectStatement()
         {
-            var primaryTable = CacheHelper.TryGetTable<TData>();
-            var selectTable = (SelectType != typeof(TData)) ? CacheHelper.TryGetTable(SelectType) : primaryTable;
+            var primaryTable = EntityTableCacheHelper.TryGetTable<TData>();
+            var selectTable = (SelectType != typeof(TData)) ? EntityTableCacheHelper.TryGetTable(SelectType) : primaryTable;
 
             _selectStatement = new StringBuilder();
 
@@ -203,7 +202,7 @@ using System.Text;
 
         public virtual void Operator()
         {
-            Write(QueryHelper.GetOperator((NotOperater) ? ExpressionType.NotEqual : ExpressionType.Equal));
+            Write((NotOperater ? ExpressionType.NotEqual : ExpressionType.Equal).GetOperator());
             NotOperater = false;
         }
 

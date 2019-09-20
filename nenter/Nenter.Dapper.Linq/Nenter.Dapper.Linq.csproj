@@ -12,4 +12,8 @@
       <ProjectReference Include="..\Nenter.Core\Nenter.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Helpers\QueryHelper.cs" />
+    </ItemGroup>
+
 </Project>

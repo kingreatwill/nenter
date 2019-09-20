@@ -1,8 +1,6 @@
 ﻿﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -19,23 +17,14 @@ namespace Nenter.Dapper.Linq
         /// <param name="expression"></param>
         public Linq2Dapper(IQueryProvider provider, Expression expression)
         {
-            if (provider == null)
-            {
-                throw new ArgumentNullException("provider");
-            }
-
-            if (expression == null)
-            {
-                throw new ArgumentNullException("expression");
-            }
-
+            Expression = expression ?? throw new ArgumentNullException(nameof(expression));
+            
             if (!typeof(IQueryable<TData>).IsAssignableFrom(expression.Type))
             {
-                throw new ArgumentOutOfRangeException("expression");
+                throw new ArgumentOutOfRangeException(nameof(expression));
             }
-
-            Provider = provider;
-            Expression = expression;
+            
+            Provider = provider ?? throw new ArgumentNullException(nameof(provider));
         }
 
         /// <summary> 
@@ -59,10 +48,7 @@ namespace Nenter.Dapper.Linq
         public IDbConnection Connection { get; private set; }
         public Expression Expression { get; private set; }
 
-        public Type ElementType
-        {
-            get { return typeof(TData); }
-        }
+        public Type ElementType => typeof(TData);
 
         #endregion
 

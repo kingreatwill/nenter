@@ -179,7 +179,7 @@ namespace Nenter.Data.SqlAdapter
                  return;
              StatusPropertyName = statusProperty.ColumnName;
 
-             if (statusProperty.PropertyInfo.PropertyType.IsBool())
+             if (statusProperty.PropertyInfo.PropertyType.IsBoolean())
              {
                  var deleteProperty = AllProperties.FirstOrDefault(p => p.GetCustomAttributes<DeletedAttribute>().Any());
                  if (deleteProperty == null)
@@ -314,7 +314,7 @@ namespace Nenter.Data.SqlAdapter
                         }
                         else
                         {
-                            var vKey = string.Format("{0}_p{1}", qpExpr.PropertyName, qLevel); //Handle multiple uses of a field
+                            var vKey = $"{qpExpr.PropertyName}_p{qLevel}"; //Handle multiple uses of a field
                             
                             sqlBuilder.AppendFormat("{0}.{1} {2} @{3}", tableName, columnName, qpExpr.QueryOperator, vKey);
                             conditions.Add(new KeyValuePair<string, object>(vKey, qpExpr.PropertyValue));
@@ -619,8 +619,8 @@ namespace Nenter.Data.SqlAdapter
             string ProjectionFunction(SqlPropertyMetadata p)
             {
                 return !string.IsNullOrEmpty(p.Alias)
-                    ? string.Format("{0}.{1} AS {2}", tableName, p.ColumnName, p.PropertyName)
-                    : string.Format("{0}.{1}", tableName, p.ColumnName);
+                    ? $"{tableName}.{p.ColumnName} AS {p.PropertyName}"
+                    : $"{tableName}.{p.ColumnName}";
             }
 
             return string.Join(", ", properties.Select(ProjectionFunction));
@@ -795,7 +795,7 @@ namespace Nenter.Data.SqlAdapter
                     // ReSharper disable once PossibleNullReferenceException
                     parameters.Add(property.PropertyName + i, entityType.GetProperty(property.PropertyName).GetValue(entitiesArray[i], null));
 
-                values.Add(string.Format("({0})", string.Join(", ", properties.Select(p => "@" + p.PropertyName + i))));
+                values.Add($"({string.Join(", ", properties.Select(p => "@" + p.PropertyName + i))})");
             }
 
             query.SqlBuilder.AppendFormat("INSERT INTO {0} ({1}) VALUES {2}", TableName, string.Join(", ", properties.Select(p => p.ColumnName)), string.Join(",", values)); // values
@@ -823,12 +823,12 @@ namespace Nenter.Data.SqlAdapter
                 .Append(" SET ");
 
             query.SqlBuilder.Append(string.Join(", ", properties
-                .Select(p => string.Format("{0} = @{1}", p.ColumnName, p.PropertyName))));
+                .Select(p => $"{p.ColumnName} = @{p.PropertyName}")));
 
             query.SqlBuilder.Append(" WHERE ");
 
             query.SqlBuilder.Append(string.Join(" AND ", KeySqlProperties.Where(p => !p.IgnoreUpdate)
-                .Select(p => string.Format("{0} = @{1}", p.ColumnName, p.PropertyName))));
+                .Select(p => $"{p.ColumnName} = @{p.PropertyName}")));
 
             return query;
         }
@@ -849,7 +849,7 @@ namespace Nenter.Data.SqlAdapter
                 .Append(" SET ");
 
             query.SqlBuilder.Append(string.Join(", ", properties
-                .Select(p => string.Format("{0} = @{1}", p.ColumnName, p.PropertyName))));
+                .Select(p => $"{p.ColumnName} = @{p.PropertyName}")));
 
             query.SqlBuilder
                 .Append(" ");
@@ -892,11 +892,8 @@ namespace Nenter.Data.SqlAdapter
                 if (i > 0)
                     query.SqlBuilder.Append("; ");
 
-                query.SqlBuilder.Append(string.Format("UPDATE {0} SET {1} WHERE {2}", TableName,
-                                                        string.Join(", ", properties.Select(p => string.Format("{0} = @{1}{2}", p.ColumnName, p.PropertyName, i))),
-                                                        string.Join(" AND ", KeySqlProperties.Where(p => !p.IgnoreUpdate)
-                                                                                             .Select(p => string.Format("{0} = @{1}{2}", p.ColumnName, p.PropertyName, i)))
-                                                    ));
+                query.SqlBuilder.Append(
+                    $"UPDATE {TableName} SET {string.Join(", ", properties.Select(p => $"{p.ColumnName} = @{p.PropertyName}{i}"))} WHERE {string.Join(" AND ", KeySqlProperties.Where(p => !p.IgnoreUpdate).Select(p => $"{p.ColumnName} = @{p.PropertyName}{i}"))}");
 
                 // ReSharper disable PossibleNullReferenceException
                 foreach (var property in properties)
@@ -1008,7 +1005,7 @@ namespace Nenter.Data.SqlAdapter
         {
             var sqlQuery = new SqlQuery();
             var whereAndSql = 
-                string.Join(" AND ", KeySqlProperties.Select(p => string.Format("{0}.{1} = @{2}", TableName, p.ColumnName, p.PropertyName)));
+                string.Join(" AND ", KeySqlProperties.Select(p => $"{TableName}.{p.ColumnName} = @{p.PropertyName}"));
 
             if (!LogicalDelete)
             {

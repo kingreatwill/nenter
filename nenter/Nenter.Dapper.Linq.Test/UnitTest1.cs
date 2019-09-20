@@ -42,7 +42,7 @@ namespace Nenter.Dapper.Linq.Test
             var _connection = new MySqlConnection("Server=192.168.1.50;Port=3306;Database=DemoCloud;Uid=DemoCloudUser;Pwd=123456@lcb;");
             try
             {
-                var s = _connection.Query<Supplier>().OrderBy(t=>t.SupplierId).Skip(2).Take(10).Single();
+                var s = _connection.Query<Supplier>().OrderBy(t=>t.SupplierId).Skip(2).Take(10).ToList();
             }
             catch (Exception e)
             {

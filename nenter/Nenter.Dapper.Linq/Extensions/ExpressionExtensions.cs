@@ -1,27 +1,26 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
+using Nenter.Core.Extensions;
+using Nenter.Dapper.Linq.Helpers;
 
-namespace Nenter.Dapper.Linq.Helpers
+namespace Nenter.Dapper.Linq.Extensions
 {
-    internal class Helper
+    public static class ExpressionExtensions
     {
-        internal static bool IsEqualsExpression(Expression exp)
+       internal static bool IsEqualsExpression(this Expression exp)
         {
             return exp.NodeType == ExpressionType.Equal || exp.NodeType == ExpressionType.NotEqual;
         }
 
-        internal static bool IsSpecificMemberExpression(Expression exp, Type declaringType, string memberName)
+        internal static bool IsSpecificMemberExpression(this Expression exp, Type declaringType, string memberName)
         {
             return ((exp is MemberExpression) &&
                 (((MemberExpression)exp).Member.DeclaringType == declaringType) &&
                 (((MemberExpression)exp).Member.Name == memberName));
         }
 
-        internal static bool IsSpecificMemberExpression(Expression exp, Type declaringType, SortedDictionary<string, EntityColumn> propertyList)
+        internal static bool IsSpecificMemberExpression(this Expression exp, Type declaringType, SortedDictionary<string, EntityColumn> propertyList)
         {
             if (propertyList == null) return false;
             return ((exp is MemberExpression) &&
@@ -29,9 +28,10 @@ namespace Nenter.Dapper.Linq.Helpers
                     propertyList[(((MemberExpression)exp).Member.Name)] != null);
         }
 
-        internal static object GetValueFromEqualsExpression(BinaryExpression be, Type memberDeclaringType)
+        internal static object GetValueFromEqualsExpression(this BinaryExpression be, Type memberDeclaringType)
         {
-            if (!IsEqualsExpression(be))
+            
+            if (!be.IsEqualsExpression())
                 throw new Exception("There is a bug in this program.");
 
             if (be.Left.NodeType == ExpressionType.MemberAccess)
@@ -57,116 +57,110 @@ namespace Nenter.Dapper.Linq.Helpers
             throw new Exception("There is a bug in this program.");
         }
 
-        internal static string GetPropertyNameFromEqualsExpression(BinaryExpression be, Type memberDeclaringType)
+        internal static string GetPropertyNameFromEqualsExpression(this BinaryExpression be, Type memberDeclaringType)
         {
-            if (!IsEqualsExpression(be))
+            if (!be.IsEqualsExpression())
                 throw new Exception("There is a bug in this program.");
 
             if (be.Left.NodeType == ExpressionType.MemberAccess)
             {
-                return GetPropertyNameFromExpression(be.Left);
+                return be.Left.GetPropertyNameFromExpression();
             }
             if (be.Right.NodeType == ExpressionType.MemberAccess)
             {
-                return GetPropertyNameFromExpression(be.Right);
+                return be.Right.GetPropertyNameFromExpression();
             }
 
             // We should have returned by now. 
             throw new Exception("There is a bug in this program.");
         }
 
-        internal static string GetIndentifierFromExpression(Expression expression)
+        internal static string GetIndentifierFromExpression(this Expression expression)
         {
-            return GetTableFromExpression(expression).Identifier;
+            return expression.GetTableFromExpression().Identifier;
         }
 
-        internal static TableHelper GetTableFromExpression(Expression expression)
+        internal static EntityTable GetTableFromExpression(this Expression expression)
         {
-            var exp = GetMemberExpression(expression);
+            var exp = expression.GetMemberExpression();
             if (!(exp is MemberExpression)) return null;
 
-            return CacheHelper.TryGetTable(((MemberExpression)exp).Expression.Type);
+            return EntityTableCacheHelper.TryGetTable(((MemberExpression)exp).Expression.Type);
         }
+      
 
-        internal static string GetPropertyNameWithIdentifierFromExpression(Expression expression)
+        internal static string GetPropertyNameFromExpression(this Expression expression)
         {
-            var exp = GetMemberExpression(expression);
-            if (!(exp is MemberExpression)) return string.Empty;
-
-            var table = CacheHelper.TryGetTable(((MemberExpression)exp).Expression.Type);
-            var member = ((MemberExpression)exp).Member;
-
-            return $"{table.Identifier}.[{table.Columns[member.Name].ColumnName}]";
-        }
-
-        internal static string GetPropertyNameFromExpression(Expression expression)
-        {
-            var exp = GetMemberExpression(expression);
+            var exp = expression.GetMemberExpression();
             if (!(exp is MemberExpression)) return string.Empty;
 
             var member = ((MemberExpression)exp).Member;
-            var columns = CacheHelper.TryGetPropertyList(((MemberExpression)exp).Expression.Type);
+            var columns = EntityTableCacheHelper.TryGetPropertyList(((MemberExpression)exp).Expression.Type);
             return columns[member.Name].ColumnName;
         }
 
-        internal static Expression GetMemberExpression(Expression expression)
+        internal static Expression GetMemberExpression(this Expression expression)
         {
             if (expression is UnaryExpression)
-                return GetMemberExpression((((UnaryExpression)expression).Operand));
+                return (((UnaryExpression)expression).Operand).GetMemberExpression();
             if (expression is LambdaExpression)
-                return GetMemberExpression((((LambdaExpression)expression).Body));
+                return (((LambdaExpression)expression).Body).GetMemberExpression();
             if (expression is MemberExpression)
                 return expression;
             return null;
         }
 
-        internal static object GetValueFromExpression(Expression expression)
+        internal static object GetValueFromExpression(this Expression expression)
         {
             return Expression.Lambda(expression).Compile().DynamicInvoke();
         }
 
         internal static string GetOperator(string methodName)
         {
-            return methodName switch
+            switch (methodName)
             {
-                "Add" => "+",
-                "Subtract" => "-",
-                "Multiply" => "*",
-                "Divide" => "/",
-                "Negate" => "-",
-                "Remainder" => "%",
-                _ => null
-            };
+                case "Add": return "+";
+                case "Subtract": return "-";
+                case "Multiply": return "*";
+                case "Divide": return "/";
+                case "Negate": return "-";
+                case "Remainder": return "%";
+                default: return null;
+            }
         }
 
-        internal static string GetOperator(UnaryExpression u)
+        internal static string GetOperator(this UnaryExpression u)
         {
-            return u.NodeType switch
+            switch (u.NodeType)
             {
-                ExpressionType.Negate => "-",
-                ExpressionType.NegateChecked => "-",
-                ExpressionType.UnaryPlus => "+",
-                ExpressionType.Not => (IsBoolean(u.Operand.Type) ? "NOT" : "~"),
-                _ => ""
-            };
+                case ExpressionType.Negate:
+                case ExpressionType.NegateChecked:
+                    return "-";
+                case ExpressionType.UnaryPlus:
+                    return "+";
+                case ExpressionType.Not:
+                    return u.Operand.Type.IsBoolean() ? "NOT" : "~";
+                default:
+                    return "";
+            }
         }
 
-        internal static string GetOperator(BinaryExpression b)
+        internal static string GetOperator(this BinaryExpression b)
         {
             switch (b.NodeType)
             {
                 case ExpressionType.And:
                 case ExpressionType.AndAlso:
-                    return (IsBoolean(b.Left.Type)) ? "AND" : "&";
+                    return b.Left.Type.IsBoolean() ? "AND" : "&";
                 case ExpressionType.Or:
                 case ExpressionType.OrElse:
-                    return (IsBoolean(b.Left.Type) ? "OR" : "|");
+                    return b.Left.Type.IsBoolean() ? "OR" : "|";
                 default:
                     return GetOperator(b.NodeType);
             }
         }
 
-        internal static string GetOperator(ExpressionType exprType)
+        internal static string GetOperator(this ExpressionType exprType)
         {
             switch (exprType)
             {
@@ -206,17 +200,12 @@ namespace Nenter.Dapper.Linq.Helpers
             }
         }
 
-        internal static bool IsHasValue(Expression expr)
+        internal static bool IsHasValue(this Expression expr)
         {
             return (expr is MemberExpression) && (((MemberExpression)expr).Member.Name == "HasValue");
         }
 
-        internal static bool IsBoolean(Type type)
-        {
-            return type == typeof(bool) || type == typeof(bool?);
-        }
-
-        internal static bool IsPredicate(Expression expr)
+        internal static bool IsPredicate(this Expression expr)
         {
             switch (expr.NodeType)
             {
@@ -224,9 +213,10 @@ namespace Nenter.Dapper.Linq.Helpers
                 case ExpressionType.AndAlso:
                 case ExpressionType.Or:
                 case ExpressionType.OrElse:
-                    return IsBoolean(expr.Type);
                 case ExpressionType.Not:
-                    return IsBoolean(expr.Type);
+                case ExpressionType.Call:
+                    return expr.Type.IsBoolean();
+                
                 case ExpressionType.Equal:
                 case ExpressionType.NotEqual:
                 case ExpressionType.LessThan:
@@ -234,14 +224,13 @@ namespace Nenter.Dapper.Linq.Helpers
                 case ExpressionType.GreaterThan:
                 case ExpressionType.GreaterThanOrEqual:
                     return true;
-                case ExpressionType.Call:
-                    return IsBoolean(expr.Type);
+                
                 default:
                     return false;
             }
         }
 
-        internal static bool IsVariable(Expression expr)
+        internal static bool IsVariable(this Expression expr)
         {
             return (expr is MemberExpression) && (((MemberExpression)expr).Expression is ConstantExpression);
         }
