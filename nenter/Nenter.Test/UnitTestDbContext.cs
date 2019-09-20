@@ -4,7 +4,7 @@ using Dapper;
 using Nenter.Data;
 using Nenter.Data.Dapper;
 using Nenter.Data.Entities;
-using Nenter.Data.SqlAdapter;
+using Nenter.Data.Dapper.SqlAdapter;
 using NUnit.Framework;
 
 namespace Nenter.Test

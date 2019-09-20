@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Nenter.Data.SqlAdapter
+namespace Nenter.Data.Dapper.SqlAdapter
 {
     /// <summary>
     ///     A object with the generated sql and dynamic params.

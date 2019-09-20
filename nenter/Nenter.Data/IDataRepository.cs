@@ -6,13 +6,11 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Nenter.Data.PagedList;
-using Nenter.Data.SqlAdapter;
 
 namespace Nenter.Data
 {
     public interface IDataRepository<TEntity> where TEntity : class
     {
-        ISqlAdapter<TEntity> SqlAdapter { get; }
         
         Task<bool> ChangeTableAsync(string table,CancellationToken cancellationToken = default);
         

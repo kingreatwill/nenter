@@ -1,19 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
-namespace Nenter.Data.SqlAdapter
+namespace Nenter.Data.Dapper.SqlAdapter
 {
-    public class PostgresAdapter<TEntity>:SqlAdapter<TEntity> where TEntity : class
+    public class MySqlAdapter<TEntity>:SqlAdapter<TEntity> where TEntity : class
     {
-        public PostgresAdapter()
+        
+        public MySqlAdapter()
             : this(false)
         {
         }
 
-        public PostgresAdapter(bool useQuotationMarks = false)
+        public MySqlAdapter(bool useQuotationMarks = false)
             : base(new SqlAdapterConfig
             {
-                SqlProvider = SqlProvider.PostgreSQL,
+                SqlProvider = SqlProvider.MySQL,
                 UseQuotationMarks = useQuotationMarks
             })
         {
@@ -22,7 +25,7 @@ namespace Nenter.Data.SqlAdapter
         public override SqlQuery  GetInsert(TEntity entity)
         {
             var query = base.GetInsert(entity);
-            query.SqlBuilder.Append(" RETURNING " + IdentitySqlProperty.ColumnName);
+            query.SqlBuilder.Append("; SELECT CONVERT(LAST_INSERT_ID(), SIGNED INTEGER) AS " + IdentitySqlProperty.ColumnName);
             return query;
         }
         

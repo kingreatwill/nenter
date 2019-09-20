@@ -1,4 +1,4 @@
-﻿﻿ namespace Nenter.Data.SqlAdapter.QueryExpressions
+﻿﻿ namespace Nenter.Data.Dapper.SqlAdapter.QueryExpressions
 {
     /// <inheritdoc />
     /// <summary>

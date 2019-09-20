@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Nenter.Data.SqlAdapter
+namespace Nenter.Data.Dapper.SqlAdapter
 {
     public interface ISqlAdapter<TEntity> where TEntity : class
     {

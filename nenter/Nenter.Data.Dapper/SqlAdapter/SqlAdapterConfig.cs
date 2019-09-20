@@ -1,4 +1,4 @@
-﻿﻿namespace Nenter.Data.SqlAdapter
+﻿﻿namespace Nenter.Data.Dapper.SqlAdapter
 {
     /// <summary>
     ///     Config for SqlAdapterConfig

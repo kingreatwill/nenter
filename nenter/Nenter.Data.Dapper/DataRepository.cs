@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using Nenter.Data.PagedList;
-using Nenter.Data.SqlAdapter;
+using Nenter.Data.Dapper.SqlAdapter;
 
 namespace Nenter.Data.Dapper
 {

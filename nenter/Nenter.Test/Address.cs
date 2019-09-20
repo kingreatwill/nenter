@@ -12,7 +12,7 @@ namespace Nenter.Test
     public class Address
     {
         [Key]
-        [Identity]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         public string Street { get; set; }

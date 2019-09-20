@@ -1,7 +1,7 @@
 ﻿﻿using System.Reflection;
  using Nenter.Data.Attributes.Joins;
 
- namespace Nenter.Data.SqlAdapter
+ namespace Nenter.Data.Dapper.SqlAdapter
 {
     /// <summary>
     /// </summary>

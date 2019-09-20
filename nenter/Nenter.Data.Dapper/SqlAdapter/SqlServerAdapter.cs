@@ -1,6 +1,6 @@
 ﻿using System.Transactions;
 
-namespace Nenter.Data.SqlAdapter
+namespace Nenter.Data.Dapper.SqlAdapter
 {
     public class SqlServerAdapter<TEntity>:SqlAdapter<TEntity> where TEntity : class
     {
