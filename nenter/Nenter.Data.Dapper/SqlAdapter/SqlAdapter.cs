@@ -10,10 +10,10 @@ using Nenter.Core.Extensions;
 using Nenter.Data.Attributes;
 using Nenter.Data.Attributes.Joins;
 using Nenter.Data.Attributes.LogicalDelete;
-using Nenter.Data.SqlAdapter.QueryExpressions;
+using Nenter.Data.Dapper.SqlAdapter.QueryExpressions;
 using TypeExtensions = Nenter.Data.Extensions.TypeExtensions;
 
-namespace Nenter.Data.SqlAdapter
+namespace Nenter.Data.Dapper.SqlAdapter
 {
     public abstract class SqlAdapter<TEntity> : ISqlAdapter<TEntity>
         where TEntity : class
@@ -76,7 +76,7 @@ namespace Nenter.Data.SqlAdapter
             KeySqlProperties = props.Where(p => p.GetCustomAttributes<KeyAttribute>().Any()).Select(p => new SqlPropertyMetadata(p)).ToArray();
 
             // Use identity as key pattern
-            var identityProperty = props.FirstOrDefault(p => p.GetCustomAttributes<IdentityAttribute>().Any());
+            var identityProperty = props.FirstOrDefault(p => p.GetCustomAttributes<DatabaseGeneratedAttribute>().Any(t => t.DatabaseGeneratedOption == DatabaseGeneratedOption.Identity));
             IdentitySqlProperty = identityProperty != null ? new SqlPropertyMetadata(identityProperty) : null;
 
             var dateChangedProperty = props.FirstOrDefault(p => p.GetCustomAttributes<UpdatedAtAttribute>().Count() == 1);

@@ -51,3 +51,6 @@ Schema
   MySQL   ; SELECT CONVERT(LAST_INSERT_ID(), SIGNED INTEGER) AS
   
   PostgreSQL     RETURNING
+  
+  
+  表达式：https://www.cnblogs.com/whuanle/p/11545441.html

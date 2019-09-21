@@ -2,7 +2,7 @@
 using System.Reflection;
  using Nenter.Data.Attributes;
 
- namespace Nenter.Data.SqlAdapter
+ namespace Nenter.Data.Dapper.SqlAdapter
 {
     /// <summary>
     ///     Metadata from PropertyInfo

@@ -2,12 +2,9 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 
-[assembly: InternalsVisibleTo("MicroOrm.Dapper.Repositories.Tests")]
-
-namespace Nenter.Data.SqlAdapter
+namespace Nenter.Data.Dapper.SqlAdapter
 {
     internal static class ExpressionHelper
     {
