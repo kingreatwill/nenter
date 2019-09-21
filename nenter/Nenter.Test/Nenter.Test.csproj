@@ -15,6 +15,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Nenter.Data.Dapper\Nenter.Data.Dapper.csproj" />
+      <ProjectReference Include="..\Nenter.Data.EntityFramework\Nenter.Data.EntityFramework.csproj" />
       <ProjectReference Include="..\Nenter.Data\Nenter.Data.csproj" />
     </ItemGroup>
 

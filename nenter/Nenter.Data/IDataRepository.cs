@@ -11,6 +11,9 @@ namespace Nenter.Data
 {
     public interface IDataRepository<TEntity> where TEntity : class
     {
+        IDbContext GetContext();
+        IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate, bool disableTracking = true);
+        TEntity Find(params object[] keyValues);
         
         Task<bool> ChangeTableAsync(string table,CancellationToken cancellationToken = default);
         

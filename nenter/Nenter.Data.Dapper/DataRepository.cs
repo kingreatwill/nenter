@@ -64,7 +64,22 @@ namespace Nenter.Data.Dapper
         public IDbTransaction Transaction { get; }
         
         public ISqlAdapter<TEntity> SqlAdapter { get; }
-        
+
+        public IDbContext GetContext()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate, bool disableTracking = true)
+        {
+            throw new NotImplementedException();
+        }
+
+        public TEntity Find(params object[] keyValues)
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual Task<bool> ChangeTableAsync(string table, CancellationToken cancellationToken = default)
         {
             var tcs = new TaskCompletionSource<bool>();
