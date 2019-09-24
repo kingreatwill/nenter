@@ -11,23 +11,12 @@ namespace Nenter.Data
 {
     public interface IDataRepository<TEntity> where TEntity : class
     {
-        IDbContext GetContext();
-        IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate, bool disableTracking = true);
-        TEntity Find(params object[] keyValues);
-        
         Task<bool> ChangeTableAsync(string table,CancellationToken cancellationToken = default);
+        
+        IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate);
         
         Task<TEntity> FindAsync(Expression<Func<TEntity, bool>> predicate,CancellationToken cancellationToken = default);
         
-        Task<TEntity> FindAsync<TChild1, TChild2, TChild3, TChild4, TChild5, TChild6>(Expression<Func<TEntity, bool>> predicate,
-            Expression<Func<TEntity, object>> tChild1,
-            Expression<Func<TEntity, object>> tChild2,
-            Expression<Func<TEntity, object>> tChild3,
-            Expression<Func<TEntity, object>> tChild4,
-            Expression<Func<TEntity, object>> tChild5,
-            Expression<Func<TEntity, object>> tChild6,
-            CancellationToken cancellationToken = default);
-       
         Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> predicate = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,
             CancellationToken cancellationToken = default);

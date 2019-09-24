@@ -14,7 +14,7 @@ namespace Nenter.Data.EntityFramework
 
             modelBuilder.Entity<Blog>().ToTable("");
             // 禁用筛选器 IgnoreQueryFilters() 
-
+           
             //modelBuilder.Entity<Blog>().Property<string>("TenantId").HasField("_tenantId");
 
             // Configure entity filters

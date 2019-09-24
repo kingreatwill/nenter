@@ -43,6 +43,7 @@ namespace Nenter.Dapper.Linq.Test
             try
             {
                 var s = _connection.Query<Supplier>().OrderBy(t=>t.SupplierId).Skip(2).Take(10).ToList();
+                Console.WriteLine(s);
             }
             catch (Exception e)
             {

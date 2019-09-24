@@ -19,7 +19,7 @@ namespace Nenter.Test
         [Test]
         public void Test1()
         {
-            var Db = new MsSqlDbContext("Server=(local);Initial Catalog=master;Integrated Security=True");
+            var Db = new MsSqlDapperDbContext("Server=(local);Initial Catalog=master;Integrated Security=True");
             //Db.Connection.Execute("USE master; DROP DATABASE NenterTest");
             //Db.Connection.Execute($"CREATE DATABASE [NenterTest];");
             Db.Connection.Execute($"USE [NenterTest]");
@@ -34,11 +34,11 @@ namespace Nenter.Test
     }
 
 
-    public class MsSqlDbContext : DbContext
+    public class MsSqlDapperDbContext : DapperDbContext
     {
         private IDataRepository<Address> _address;
 
-        public MsSqlDbContext(string connectionString) : base(new SqlConnection(connectionString))
+        public MsSqlDapperDbContext(string connectionString) : base(new SqlConnection(connectionString))
         {
         }
 

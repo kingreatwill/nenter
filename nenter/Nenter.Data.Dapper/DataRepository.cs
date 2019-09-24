@@ -64,22 +64,8 @@ namespace Nenter.Data.Dapper
         public IDbTransaction Transaction { get; }
         
         public ISqlAdapter<TEntity> SqlAdapter { get; }
-
-        public IDbContext GetContext()
-        {
-            throw new NotImplementedException();
-        }
-
-        public IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate, bool disableTracking = true)
-        {
-            throw new NotImplementedException();
-        }
-
-        public TEntity Find(params object[] keyValues)
-        {
-            throw new NotImplementedException();
-        }
-
+      
+        
         public virtual Task<bool> ChangeTableAsync(string table, CancellationToken cancellationToken = default)
         {
             var tcs = new TaskCompletionSource<bool>();
@@ -98,6 +84,12 @@ namespace Nenter.Data.Dapper
             }
             return tcs.Task;
         }
+        
+        public IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate)
+        {
+            throw new NotImplementedException();
+        }
+       
 
         public Task<TEntity> FindAsync(Expression<Func<TEntity, bool>> predicate,CancellationToken cancellationToken = default)
         {
@@ -108,12 +100,6 @@ namespace Nenter.Data.Dapper
                     null, null, CommandFlags.Buffered, 
                     cancellationToken)
                 );
-        }
-
-        public Task<TEntity> FindAsync<TChild1, TChild2, TChild3, TChild4, TChild5, TChild6>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, object>> tChild1,
-            Expression<Func<TEntity, object>> tChild2, Expression<Func<TEntity, object>> tChild3, Expression<Func<TEntity, object>> tChild4, Expression<Func<TEntity, object>> tChild5, Expression<Func<TEntity, object>> tChild6,CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException();
         }
 
         public Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> predicate = null, Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,CancellationToken cancellationToken = default)
