@@ -13,7 +13,7 @@ namespace Nenter.Data
     {
         Task<bool> ChangeTableAsync(string table,CancellationToken cancellationToken = default);
         
-        IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate);
+        IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate = null);
         
         Task<TEntity> FindAsync(Expression<Func<TEntity, bool>> predicate,CancellationToken cancellationToken = default);
         

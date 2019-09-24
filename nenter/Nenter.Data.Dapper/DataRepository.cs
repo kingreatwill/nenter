@@ -85,7 +85,7 @@ namespace Nenter.Data.Dapper
             return tcs.Task;
         }
         
-        public IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate)
+        public IQueryable<TEntity> Query(Expression<Func<TEntity, bool>> predicate = null)
         {
             throw new NotImplementedException();
         }
@@ -102,10 +102,10 @@ namespace Nenter.Data.Dapper
                 );
         }
 
-        public Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> predicate = null, Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<TEntity>> FindAllAsync(Expression<Func<TEntity, bool>> predicate = null, Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>> orderBy = null,CancellationToken cancellationToken = default)
         {
             var queryResult = SqlAdapter.GetSelectAll(predicate);
-            return Connection.QueryAsync<TEntity>(
+            return await Connection.QueryAsync<TEntity>(
                 new CommandDefinition(queryResult.GetSql(), 
                     queryResult.Param, Transaction, 
                     null, null, CommandFlags.Buffered, 
