@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient; // 用Microsoft.Data.SqlClient 替换 System.Data.SqlClient
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;

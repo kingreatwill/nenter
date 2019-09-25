@@ -1,9 +1,7 @@
-﻿using System.Data;
-using System.Data.SqlClient;
-using Dapper;
+﻿using Dapper;
+using Microsoft.Data.SqlClient;  // 用Microsoft.Data.SqlClient 替换 System.Data.SqlClient
 using Nenter.Data;
 using Nenter.Data.Dapper;
-using Nenter.Data.Entities;
 using Nenter.Data.Dapper.SqlAdapter;
 using NUnit.Framework;
 
