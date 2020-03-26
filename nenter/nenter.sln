@@ -37,6 +37,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nenter.HttpClient", "Nenter.HttpClient\Nenter.HttpClient.csproj", "{66BEACBA-30D2-45E2-B7E5-AF596CC94AA9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,6 +81,10 @@ Global
 		{6014C117-66C2-4E73-A3FF-EA80A1E21AB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6014C117-66C2-4E73-A3FF-EA80A1E21AB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6014C117-66C2-4E73-A3FF-EA80A1E21AB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66BEACBA-30D2-45E2-B7E5-AF596CC94AA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66BEACBA-30D2-45E2-B7E5-AF596CC94AA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66BEACBA-30D2-45E2-B7E5-AF596CC94AA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66BEACBA-30D2-45E2-B7E5-AF596CC94AA9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -91,6 +97,7 @@ Global
 		{552E81C6-CC70-479F-B48E-A3B5572DADFB} = {49A317B3-23FD-4DC8-B8A1-6E9047F4336E}
 		{40F55259-16FC-4074-964A-B7B25A0C5628} = {49A317B3-23FD-4DC8-B8A1-6E9047F4336E}
 		{B7DD066D-3FBD-428F-803A-DB89F51779C6} = {49A317B3-23FD-4DC8-B8A1-6E9047F4336E}
+		{66BEACBA-30D2-45E2-B7E5-AF596CC94AA9} = {49A317B3-23FD-4DC8-B8A1-6E9047F4336E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7F0E38B1-A4C8-4BF8-8469-CA054745D9D4}

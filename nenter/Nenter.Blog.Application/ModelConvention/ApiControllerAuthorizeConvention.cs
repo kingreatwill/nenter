@@ -51,10 +51,10 @@ namespace Nenter.Blog.Application.ModelConvention
         {
             foreach (var controller in application.Controllers)
             {
-                if (controller.Filters.Any(x => x is ApiControllerAttribute) && !controller.Filters.Any(x => x is AccessControlFilter))
-                {
-                    controller.Filters.Add(new AccessControlFilter());
-                }
+                //if (controller.Filters.Any(x => x is ApiControllerAttribute) && !controller.Filters.Any(x => x is AccessControlFilter))
+                //{
+                //    controller.Filters.Add(new AccessControlFilter());
+                //}
             }
         }
     }
