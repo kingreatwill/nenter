@@ -10,3 +10,5 @@ MetaWeblog  https://github.com/shawnwildermuth/MetaWeblog
  // DispatchProxy
 // AssemblyLoadContext
 // TypeScriptAST
+
+[Blazor.HttpClientInterceptor](https://github.com/jsakamoto/Toolbelt.Blazor.HttpClientInterceptor)
